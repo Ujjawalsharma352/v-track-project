@@ -13,18 +13,18 @@ A full-stack application for logging vehicle entry and exit with dashboard, sear
 ## Project Structure
 
 V-TRACK_APPLICATION/
-├── vtrack-backend/          # Spring Boot REST API
+├── vtrack-backend/        
 │   ├── src/main/java/com/vtrack/
-│   │   ├── config/          # Security, CORS
-│   │   ├── controller/      # REST controllers
-│   │   ├── dto/             # Request/Response DTOs
-│   │   ├── entity/          # JPA entities
-│   │   ├── exception/       # Global exception handler
-│   │   ├── repository/      # JPA repositories
-│   │   ├── security/        # Token auth filter
-│   │   └── service/         # Business logic
+│   │   ├── config/         
+│   │   ├── controller/    
+│   │   ├── dto/             
+│   │   ├── entity/        
+│   │   ├── exception/      
+│   │   ├── repository/      
+│   │   ├── security/        
+│   │   └── service/         
 │   └── pom.xml
-├── vtrack-frontend/         # HTML/CSS/JS
+├── vtrack-frontend/         
 │   ├── css/styles.css
 │   ├── js/api.js
 │   ├── index.html
@@ -34,8 +34,8 @@ V-TRACK_APPLICATION/
 │   ├── dashboard.html
 │   ├── logs.html
 │   └── search.html
-├── database/schema.sql      # Sample MySQL schema
-├── postman/                 # Postman collection
+├── database/schema.sql      
+├── postman/                 
 └── README.md
 
 
