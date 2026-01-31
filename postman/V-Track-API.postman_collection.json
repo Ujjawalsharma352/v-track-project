@@ -1,0 +1,149 @@
+{
+  "info": {
+    "name": "V-Track API",
+    "description": "Vehicle Entry & Exit Logging System - REST API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "token", "value": "vtrack-admin-token" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": "{{baseUrl}}/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Entry",
+      "item": [
+        {
+          "name": "Add Entry",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleNumber\": \"MH-12-AB-1234\",\n  \"vehicleType\": \"Car\",\n  \"driverName\": \"John Doe\",\n  \"purpose\": \"Visit\"\n}"
+            },
+            "url": "{{baseUrl}}/entry"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exit",
+      "item": [
+        {
+          "name": "Mark Exit",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-Auth-Token", "value": "{{token}}" }],
+            "url": "{{baseUrl}}/exit/MH-12-AB-1234"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logs",
+      "item": [
+        {
+          "name": "Get All Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Auth-Token", "value": "{{token}}" }],
+            "url": "{{baseUrl}}/logs"
+          }
+        },
+        {
+          "name": "Get Today Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Auth-Token", "value": "{{token}}" }],
+            "url": "{{baseUrl}}/logs/today"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Search by Vehicle",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Auth-Token", "value": "{{token}}" }],
+            "url": "{{baseUrl}}/search?vehicleNumber=MH-12"
+          }
+        },
+        {
+          "name": "Search by Date",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Auth-Token", "value": "{{token}}" }],
+            "url": "{{baseUrl}}/search?date=2025-01-31"
+          }
+        },
+        {
+          "name": "Search by Vehicle and Date",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Auth-Token", "value": "{{token}}" }],
+            "url": "{{baseUrl}}/search?vehicleNumber=MH&date=2025-01-31"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Auth-Token", "value": "{{token}}" }],
+            "url": "{{baseUrl}}/dashboard"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Most Visited Vehicles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Auth-Token", "value": "{{token}}" }],
+            "url": "{{baseUrl}}/analytics/most-visited"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Export",
+      "item": [
+        {
+          "name": "Export CSV",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Auth-Token", "value": "{{token}}" }],
+            "url": "{{baseUrl}}/export"
+          }
+        }
+      ]
+    }
+  ]
+}

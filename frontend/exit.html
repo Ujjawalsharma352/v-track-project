@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V-Track - Vehicle Exit</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="nav-brand">V-Track</span>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="login.html">Login</a>
+      <a href="entry.html">Entry</a>
+      <a href="exit.html" class="active">Exit</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="logs.html">Logs</a>
+      <a href="search.html">Search</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">Vehicle Exit</h1>
+    <div class="card" style="max-width: 500px;">
+      <form id="exitForm">
+        <div class="form-group">
+          <label for="vehicleNumber">Vehicle Number *</label>
+          <input type="text" id="vehicleNumber" name="vehicleNumber" required placeholder="e.g. MH-12-AB-1234">
+        </div>
+        <div id="exitError" class="alert alert-error" style="display: none;"></div>
+        <button type="submit" class="btn btn-success" id="exitBtn">Mark Exit</button>
+      </form>
+    </div>
+
+    <!-- Result: show duration and overstay alert -->
+    <div id="exitResult" class="card mt-2" style="display: none;">
+      <h3 class="card-title">Exit Recorded</h3>
+      <p><strong>Vehicle:</strong> <span id="resultVehicle"></span></p>
+      <p><strong>Entry Time:</strong> <span id="resultEntry"></span></p>
+      <p><strong>Exit Time:</strong> <span id="resultExit"></span></p>
+      <p><strong>Parking Duration:</strong> <span id="resultDuration"></span></p>
+      <div id="overstayAlert" class="alert alert-warning" style="display: none;">
+        Overstay: Vehicle parked for more than 6 hours.
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.getElementById('exitForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
+      const errorEl = document.getElementById('exitError');
+      const resultEl = document.getElementById('exitResult');
+      const btn = document.getElementById('exitBtn');
+
+      errorEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      try {
+        const data = await markExit(vehicleNumber);
+        document.getElementById('resultVehicle').textContent = data.vehicleNumber;
+        document.getElementById('resultEntry').textContent = formatDateTime(data.entryTime);
+        document.getElementById('resultExit').textContent = formatDateTime(data.exitTime);
+        document.getElementById('resultDuration').textContent = formatDuration(data.durationInMinutes);
+        document.getElementById('overstayAlert').style.display = data.overstayAlert ? 'block' : 'none';
+        resultEl.style.display = 'block';
+        document.getElementById('exitForm').reset();
+      } catch (err) {
+        errorEl.textContent = err.message || 'Failed to mark exit';
+        errorEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Mark Exit';
+      }
+    });
+  </script>
+</body>
+</html>

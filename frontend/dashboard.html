@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V-Track - Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="nav-brand">V-Track</span>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="login.html">Login</a>
+      <a href="entry.html">Entry</a>
+      <a href="exit.html">Exit</a>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="logs.html">Logs</a>
+      <a href="search.html">Search</a>
+      <a href="#" id="logoutLink">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="text-muted mb-2">Today's overview</p>
+
+    <div class="dashboard-grid" id="dashboardCards">
+      <div class="card">
+        <div class="card-title">Today's Entries</div>
+        <div class="card-value" id="todayEntries">-</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Today's Exits</div>
+        <div class="card-value" id="todayExits">-</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Currently Parked</div>
+        <div class="card-value" id="currentlyParked">-</div>
+      </div>
+    </div>
+
+    <div id="dashboardError" class="alert alert-error" style="display: none;"></div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('redirect');
+
+    document.getElementById('logoutLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('vtrack_token');
+      window.location.href = 'login.html';
+    });
+
+    async function loadDashboard() {
+      const errEl = document.getElementById('dashboardError');
+      try {
+        const data = await getDashboard();
+        document.getElementById('todayEntries').textContent = data.todayEntries;
+        document.getElementById('todayExits').textContent = data.todayExits;
+        document.getElementById('currentlyParked').textContent = data.currentlyParked;
+        errEl.style.display = 'none';
+      } catch (err) {
+        errEl.textContent = err.message || 'Failed to load dashboard';
+        errEl.style.display = 'block';
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

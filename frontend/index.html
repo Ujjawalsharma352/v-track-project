@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V-Track - Vehicle Entry & Exit Logging</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="nav-brand">V-Track</span>
+    <div class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="login.html">Login</a>
+      <a href="entry.html">Entry</a>
+      <a href="exit.html">Exit</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="logs.html">Logs</a>
+      <a href="search.html">Search</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">V-Track – Vehicle Entry & Exit Logging System</h1>
+    <div class="card">
+      <p>Welcome to V-Track. Use the navigation to:</p>
+      <ul style="margin: 1rem 0 1rem 1.5rem;">
+        <li><strong>Login</strong> – Admin login (required for Dashboard, Logs, Search)</li>
+        <li><strong>Entry</strong> – Record vehicle entry</li>
+        <li><strong>Exit</strong> – Record vehicle exit and see duration</li>
+        <li><strong>Dashboard</strong> – Today's stats (entries, exits, currently parked)</li>
+        <li><strong>Logs</strong> – View all logs with filters</li>
+        <li><strong>Search</strong> – Search by vehicle number or date</li>
+      </ul>
+      <p class="text-muted">Ensure the backend is running on <code>http://localhost:8080</code>.</p>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V-Track - Search</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <span class="nav-brand">V-Track</span>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="login.html">Login</a>
+      <a href="entry.html">Entry</a>
+      <a href="exit.html">Exit</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="logs.html">Logs</a>
+      <a href="search.html" class="active">Search</a>
+      <a href="#" id="logoutLink">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">Search Logs</h1>
+    <p class="text-muted mb-2">Search by vehicle number and/or date (yyyy-MM-dd)</p>
+
+    <div class="card mb-2">
+      <div class="filters">
+        <div class="form-group">
+          <label for="searchVehicle">Vehicle Number</label>
+          <input type="text" id="searchVehicle" placeholder="e.g. MH-12">
+        </div>
+        <div class="form-group">
+          <label for="searchDate">Date</label>
+          <input type="date" id="searchDate">
+        </div>
+        <button type="button" class="btn btn-primary" id="searchBtn">Search</button>
+      </div>
+    </div>
+
+    <div id="searchError" class="alert alert-error" style="display: none;"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vehicle #</th>
+            <th>Type</th>
+            <th>Driver</th>
+            <th>Purpose</th>
+            <th>Entry Time</th>
+            <th>Exit Time</th>
+            <th>Duration</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="searchTableBody">
+          <tr><td colspan="8">Enter criteria and click Search.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('redirect');
+
+    document.getElementById('logoutLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('vtrack_token');
+      window.location.href = 'login.html';
+    });
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function renderLogs(logs) {
+      const tbody = document.getElementById('searchTableBody');
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8">No results found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = logs.map(log => `
+        <tr class="${log.overstayAlert ? 'overstay' : ''}">
+          <td>${escapeHtml(log.vehicleNumber)}</td>
+          <td>${escapeHtml(log.vehicleType)}</td>
+          <td>${escapeHtml(log.driverName || '-')}</td>
+          <td>${escapeHtml(log.purpose || '-')}</td>
+          <td>${formatDateTime(log.entryTime)}</td>
+          <td>${log.exitTime ? formatDateTime(log.exitTime) : '-'}</td>
+          <td>${formatDuration(log.durationInMinutes)}</td>
+          <td>${log.status} ${log.overstayAlert ? '(Overstay)' : ''}</td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', async () => {
+      const vehicleNumber = document.getElementById('searchVehicle').value.trim();
+      const date = document.getElementById('searchDate').value;
+      const errEl = document.getElementById('searchError');
+      if (!vehicleNumber && !date) {
+        errEl.textContent = 'Enter vehicle number and/or date.';
+        errEl.style.display = 'block';
+        return;
+      }
+      errEl.style.display = 'none';
+      document.getElementById('searchTableBody').innerHTML = '<tr><td colspan="8">Searching...</td></tr>';
+      try {
+        const logs = await searchLogs(vehicleNumber || undefined, date || undefined);
+        renderLogs(logs);
+      } catch (err) {
+        document.getElementById('searchTableBody').innerHTML = '<tr><td colspan="8">Error.</td></tr>';
+        errEl.textContent = err.message || 'Search failed';
+        errEl.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
