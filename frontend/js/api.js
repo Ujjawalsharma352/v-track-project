@@ -1,9 +1,13 @@
 /**
  * V-Track Frontend - API helper
- * Base URL for backend (Spring Boot runs on port 8080)
+ * Use the local API during frontend-only development and same-origin requests
+ * when Spring Boot serves the frontend in production.
  */
 
-const API_BASE = 'http://localhost:8080/api';
+const isLocalFrontend = window.location.protocol === 'file:' ||
+  (['localhost', '127.0.0.1'].includes(window.location.hostname) &&
+    window.location.port !== '8080');
+const API_BASE = isLocalFrontend ? 'http://localhost:8080/api' : '/api';
 
 /**
  * Get auth token from localStorage (set after login)
@@ -17,6 +21,177 @@ function getAuthToken() {
  */
 function isLoggedIn() {
   return !!getAuthToken();
+}
+
+function requireLogin(page) {
+  if (isLoggedIn()) return true;
+  window.location.replace(`login.html?returnTo=${encodeURIComponent(page)}`);
+  return false;
+}
+
+function escapeHtmlValue(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[character]);
+}
+
+function renderLogStatus(log) {
+  const status = String(log.status || 'UNKNOWN').toUpperCase();
+  const statusClass = status === 'IN' ? 'status-in' : status === 'OUT' ? 'status-out' : 'status-unknown';
+  const overstay = log.overstayAlert
+    ? '<span class="status-pill status-overstay">Overstay</span>'
+    : '';
+  return `<span class="status-pill ${statusClass}">${escapeHtmlValue(status)}</span>${overstay}`;
+}
+
+function createPagedLogList({
+  tableBody,
+  searchInput,
+  summary,
+  previousButton,
+  nextButton,
+  columnCount,
+  renderRow,
+  emptyMessage,
+  pageSize = 10,
+}) {
+  let records = [];
+  let currentPage = 1;
+
+  function showMessage(message) {
+    tableBody.replaceChildren();
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = columnCount;
+    cell.className = 'table-empty';
+    cell.textContent = message;
+    row.appendChild(cell);
+    tableBody.appendChild(row);
+    summary.textContent = '';
+    previousButton.disabled = true;
+    nextButton.disabled = true;
+  }
+
+  function render() {
+    const query = searchInput.value.trim().toLocaleLowerCase();
+    const filteredRecords = records.filter((log) => [
+      log.vehicleNumber,
+      log.vehicleType,
+      log.driverName,
+      log.purpose,
+      log.status,
+    ].some((value) => String(value ?? '').toLocaleLowerCase().includes(query)));
+
+    const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+    currentPage = Math.min(currentPage, pageCount);
+
+    if (filteredRecords.length === 0) {
+      showMessage(records.length === 0 ? emptyMessage : 'No records match your search.');
+      return;
+    }
+
+    const firstRecord = (currentPage - 1) * pageSize;
+    const visibleRecords = filteredRecords.slice(firstRecord, firstRecord + pageSize);
+    tableBody.innerHTML = visibleRecords.map((log) => renderRow(log)).join('');
+    summary.textContent =
+      `Showing ${firstRecord + 1}–${firstRecord + visibleRecords.length} of ${filteredRecords.length} · Page ${currentPage} of ${pageCount}`;
+    previousButton.disabled = currentPage === 1;
+    nextButton.disabled = currentPage === pageCount;
+  }
+
+  searchInput.addEventListener('input', () => {
+    currentPage = 1;
+    render();
+  });
+  previousButton.addEventListener('click', () => {
+    currentPage -= 1;
+    render();
+  });
+  nextButton.addEventListener('click', () => {
+    currentPage += 1;
+    render();
+  });
+
+  return {
+    setRecords(nextRecords) {
+      if (!Array.isArray(nextRecords)) {
+        throw new TypeError('Expected vehicle history to be an array.');
+      }
+      records = nextRecords;
+      currentPage = 1;
+      render();
+    },
+    showMessage,
+  };
+}
+
+function initNavigation() {
+  const nav = document.querySelector('.nav');
+  const links = nav?.querySelector('.nav-links');
+  if (!nav || !links) return;
+
+  const authenticated = isLoggedIn();
+  const items = authenticated
+    ? [
+      ['dashboard.html', 'Dashboard'],
+      ['entry.html', 'Entry'],
+      ['exit.html', 'Exit'],
+      ['logs.html', 'Logs'],
+    ]
+    : [
+      ['index.html', 'Home'],
+      ['login.html', 'Login'],
+    ];
+
+  links.replaceChildren();
+  items.forEach(([href, label]) => {
+    const link = document.createElement('a');
+    link.href = href;
+    link.textContent = label;
+    const isCurrentPage = new URL(href, window.location.href).pathname === window.location.pathname;
+    if (isCurrentPage) {
+      link.classList.add('active');
+      link.setAttribute('aria-current', 'page');
+    }
+    links.appendChild(link);
+  });
+
+  if (authenticated) {
+    const logoutLink = document.createElement('a');
+    logoutLink.href = '#';
+    logoutLink.textContent = 'Logout';
+    logoutLink.id = 'logoutLink';
+    logoutLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      localStorage.removeItem('vtrack_token');
+      window.location.href = 'login.html';
+    });
+    links.appendChild(logoutLink);
+  }
+
+  if (!links.id) links.id = 'primaryNavLinks';
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'nav-toggle';
+  toggle.setAttribute('aria-label', 'Toggle navigation');
+  toggle.setAttribute('aria-controls', links.id);
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.innerHTML = '<span></span><span></span><span></span>';
+  toggle.addEventListener('click', () => {
+    const isOpen = nav.classList.toggle('nav-open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+  });
+  links.addEventListener('click', (event) => {
+    if (event.target.closest('a') && nav.classList.contains('nav-open')) {
+      nav.classList.remove('nav-open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+  nav.appendChild(toggle);
 }
 
 /**
@@ -184,3 +359,5 @@ function formatDateTime(str) {
   const d = new Date(str);
   return d.toLocaleString();
 }
+
+initNavigation();

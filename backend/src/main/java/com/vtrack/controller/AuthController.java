@@ -6,7 +6,6 @@ import com.vtrack.service.VehicleLogService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,13 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
  * Admin login API - returns token for protected endpoints.
  */
 @RestController
-@CrossOrigin(origins = "*")
 @RequestMapping("/api")
 public class AuthController {
 
     private final VehicleLogService vehicleLogService;
 
-    @Value("${vtrack.auth.token:vtrack-admin-token}")
+    @Value("${vtrack.auth.token}")
     private String authToken;
 
     public AuthController(VehicleLogService vehicleLogService) {
@@ -31,7 +29,7 @@ public class AuthController {
 
     /**
      * POST /api/login
-     * Body: { "username": "admin", "password": "admin123" }
+     * Body: configured admin username and password.
      * Returns token to use in X-Auth-Token or Authorization: Bearer &lt;token&gt;
      */
     @PostMapping("/login")

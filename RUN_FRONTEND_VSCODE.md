@@ -9,7 +9,7 @@
 
 1. Open VS Code.
 2. **File → Open Folder**.
-3. Select folder: `V-TRACK_APPLICATION/vtrack-frontend`.
+3. Select folder: `frontend`.
 4. Click **Select Folder**.
 
 ## 3. Serve the Frontend (Live Server – Recommended)
@@ -25,7 +25,7 @@
 ## 4. Use the Application
 
 1. **Home:** index.html – overview and navigation.
-2. **Login:** login.html – use **admin** / **admin123**.
+2. **Login:** login.html – use the admin credentials configured in the backend environment.
 3. **Entry:** entry.html – record vehicle entry (confirmation popup).
 4. **Exit:** exit.html – enter vehicle number, mark exit (shows duration).
 5. **Dashboard:** dashboard.html – today’s entries, exits, currently parked (requires login).
@@ -37,7 +37,7 @@
 - Ensure backend is running at **http://localhost:8080**.
 - Open browser **Developer Tools (F12) → Console** and **Network** to see errors.
 - If you see CORS errors, ensure `application.properties` has:
-  - `vtrack.cors.allowed-origins=http://localhost:5500,http://127.0.0.1:5500`
+  - Set `VTRACK_CORS_ALLOWED_ORIGINS` in the backend run configuration to `http://localhost:5500,http://127.0.0.1:5500`.
 
 ## Alternative: Open HTML Directly
 

@@ -3,38 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>V-Track - Vehicle Entry & Exit Logging</title>
+  <title>V-Track | Vehicle Operations</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <nav class="nav">
     <span class="nav-brand">V-Track</span>
     <div class="nav-links">
-      <a href="index.html" class="active">Home</a>
+      <a href="index.html">Home</a>
       <a href="login.html">Login</a>
-      <a href="entry.html">Entry</a>
-      <a href="exit.html">Exit</a>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="logs.html">Logs</a>
-      <a href="search.html">Search</a>
     </div>
   </nav>
 
-  <div class="container">
-    <h1 class="page-title">V-Track – Vehicle Entry & Exit Logging System</h1>
-    <div class="card">
-      <p>Welcome to V-Track. Use the navigation to:</p>
-      <ul style="margin: 1rem 0 1rem 1.5rem;">
-        <li><strong>Login</strong> – Admin login (required for Dashboard, Logs, Search)</li>
-        <li><strong>Entry</strong> – Record vehicle entry</li>
-        <li><strong>Exit</strong> – Record vehicle exit and see duration</li>
-        <li><strong>Dashboard</strong> – Today's stats (entries, exits, currently parked)</li>
-        <li><strong>Logs</strong> – View all logs with filters</li>
-        <li><strong>Search</strong> – Search by vehicle number or date</li>
-      </ul>
-      <p class="text-muted">Ensure the backend is running on <code>http://localhost:8080</code>.</p>
-    </div>
-  </div>
+  <main class="container home-page">
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">VEHICLE OPERATIONS, MADE CLEAR</span>
+        <h1>Every vehicle movement,<br><span>in one clear view.</span></h1>
+        <p class="hero-description">
+          Keep arrivals, departures, and parking activity organized with one simple
+          workspace for your team.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="login.html">Open dashboard</a>
+          <a class="btn btn-outline" href="entry.html">Record a vehicle</a>
+        </div>
+      </div>
+
+      <aside class="hero-panel" aria-label="Vehicle operations workflow">
+        <p class="panel-heading">DAILY WORKFLOW</p>
+        <a class="workflow-link" href="entry.html">
+          <span class="workflow-icon" aria-hidden="true">IN</span>
+          <span>
+            <span class="workflow-title">Record an arrival</span>
+            <span class="workflow-description">Log vehicle and visit details</span>
+          </span>
+        </a>
+        <a class="workflow-link" href="exit.html">
+          <span class="workflow-icon" aria-hidden="true">OUT</span>
+          <span>
+            <span class="workflow-title">Complete a departure</span>
+            <span class="workflow-description">Close a visit and view duration</span>
+          </span>
+        </a>
+        <a class="workflow-link" href="logs.html">
+          <span class="workflow-icon" aria-hidden="true">LOG</span>
+          <span>
+            <span class="workflow-title">Review activity</span>
+            <span class="workflow-description">Browse and export vehicle logs</span>
+          </span>
+        </a>
+      </aside>
+    </section>
+
+    <section aria-labelledby="toolsHeading">
+      <h2 class="section-heading" id="toolsHeading">Your operations workspace</h2>
+      <div class="feature-grid">
+        <a class="feature-card" href="dashboard.html">
+          <span class="feature-index">01 / OVERVIEW</span>
+          <strong>Dashboard</strong>
+          <span>See today's entries, exits, and parked vehicles.</span>
+        </a>
+        <a class="feature-card" href="entry.html">
+          <span class="feature-index">02 / ARRIVALS</span>
+          <strong>Vehicle entry</strong>
+          <span>Capture vehicle, driver, and visit information.</span>
+        </a>
+        <a class="feature-card" href="search.html">
+          <span class="feature-index">03 / LOOKUP</span>
+          <strong>Search records</strong>
+          <span>Find activity by vehicle number or date.</span>
+        </a>
+        <a class="feature-card" href="logs.html">
+          <span class="feature-index">04 / REPORTS</span>
+          <strong>Logs &amp; export</strong>
+          <span>Review visit history and download a CSV report.</span>
+        </a>
+      </div>
+    </section>
+  </main>
 
   <script src="js/api.js"></script>
 </body>
