@@ -12,12 +12,6 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="login.html">Login</a>
-      <a href="entry.html">Entry</a>
-      <a href="exit.html">Exit</a>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="logs.html">Logs</a>
-      <a href="search.html" class="active">Search</a>
-      <a href="#" id="logoutLink">Logout</a>
     </div>
   </nav>
 
@@ -65,12 +59,6 @@
   <script>
     if (!requireAuth()) throw new Error('redirect');
 
-    document.getElementById('logoutLink').addEventListener('click', (e) => {
-      e.preventDefault();
-      localStorage.removeItem('vtrack_token');
-      window.location.href = 'login.html';
-    });
-
     function escapeHtml(s) {
       if (s == null) return '';
       const div = document.createElement('div');
@@ -98,7 +86,7 @@
       `).join('');
     }
 
-    document.getElementById('searchBtn').addEventListener('click', async () => {
+    async function runSearch() {
       const vehicleNumber = document.getElementById('searchVehicle').value.trim();
       const date = document.getElementById('searchDate').value;
       const errEl = document.getElementById('searchError');
@@ -117,7 +105,16 @@
         errEl.textContent = err.message || 'Search failed';
         errEl.style.display = 'block';
       }
-    });
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', runSearch);
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const initialVehicleNumber = searchParams.get('vehicleNumber') || '';
+    const initialDate = searchParams.get('date') || '';
+    document.getElementById('searchVehicle').value = initialVehicleNumber;
+    document.getElementById('searchDate').value = initialDate;
+    if (initialVehicleNumber || initialDate) runSearch();
   </script>
 </body>
 </html>

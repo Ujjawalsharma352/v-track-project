@@ -29,10 +29,10 @@ public class VehicleLogService {
 
     private final VehicleLogRepository repository;
 
-    @Value("${vtrack.admin.username:admin}")
+    @Value("${vtrack.admin.username}")
     private String adminUsername;
 
-    @Value("${vtrack.admin.password:admin123}")
+    @Value("${vtrack.admin.password}")
     private String adminPassword;
 
     public VehicleLogService(VehicleLogRepository repository) {

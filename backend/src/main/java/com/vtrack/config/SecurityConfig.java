@@ -10,7 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Security configuration: permit login and entry/exit; protect dashboard and logs with token.
+ * Allow public frontend assets and login while requiring a token for the API.
  */
 @Configuration
 @EnableWebSecurity
@@ -25,17 +25,11 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public: login and gate operations
+                        // Public: login and static frontend assets
                         .requestMatchers("/api/login").permitAll()
-                        .requestMatchers("/api/entry").permitAll()
-                        .requestMatchers("/api/exit/**").permitAll()
-                        // Protected: dashboard & logs
-                        .requestMatchers("/api/logs/**").authenticated()
-                        .requestMatchers("/api/search").authenticated()
-                        .requestMatchers("/api/dashboard").authenticated()
-                        .requestMatchers("/api/analytics/**").authenticated()
-                        .requestMatchers("/api/export").authenticated()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/", "/*.html", "/css/**", "/js/**", "/error").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().denyAll()
                 )
                 .addFilterBefore(tokenAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

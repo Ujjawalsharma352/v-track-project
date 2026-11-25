@@ -12,62 +12,204 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="login.html">Login</a>
-      <a href="entry.html">Entry</a>
-      <a href="exit.html">Exit</a>
-      <a href="dashboard.html" class="active">Dashboard</a>
-      <a href="logs.html">Logs</a>
-      <a href="search.html">Search</a>
-      <a href="#" id="logoutLink">Logout</a>
     </div>
   </nav>
 
-  <div class="container">
-    <h1 class="page-title">Dashboard</h1>
-    <p class="text-muted mb-2">Today's overview</p>
-
-    <div class="dashboard-grid" id="dashboardCards">
-      <div class="card">
-        <div class="card-title">Today's Entries</div>
-        <div class="card-value" id="todayEntries">-</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Today's Exits</div>
-        <div class="card-value" id="todayExits">-</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Currently Parked</div>
-        <div class="card-value" id="currentlyParked">-</div>
+  <main class="container dashboard-page">
+    <div class="dashboard-header">
+      <div>
+        <p class="eyebrow">V-TRACK OVERVIEW</p>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="text-muted" id="dashboardLastUpdated" aria-live="polite">
+          Dashboard data refreshes automatically every 30 seconds.
+        </p>
       </div>
     </div>
 
-    <div id="dashboardError" class="alert alert-error" style="display: none;"></div>
-  </div>
+    <div class="dashboard-grid" id="dashboardCards" aria-live="polite">
+      <div class="card">
+        <div class="card-title">Entries today</div>
+        <div class="card-value" id="todayEntries">-</div>
+        <p class="metric-note">Vehicles checked in</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Exits today</div>
+        <div class="card-value" id="todayExits">-</div>
+        <p class="metric-note">Visits completed</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Currently parked</div>
+        <div class="card-value" id="currentlyParked">-</div>
+        <p class="metric-note">Vehicles on site now</p>
+      </div>
+    </div>
+
+    <div id="dashboardError" class="alert alert-error" hidden></div>
+
+    <section class="card chart-card" aria-labelledby="weeklyActivityTitle">
+      <div class="section-header">
+        <div>
+          <h2 class="section-heading" id="weeklyActivityTitle">Weekly activity</h2>
+          <p class="text-muted">Vehicle entries and exits over the last seven days.</p>
+        </div>
+        <div class="chart-legend" aria-label="Chart legend">
+          <span><i class="legend-dot legend-entry"></i>Entries</span>
+          <span><i class="legend-dot legend-exit"></i>Exits</span>
+        </div>
+      </div>
+      <div class="weekly-chart" id="weeklyChart" role="img" aria-label="Entries and exits for the last seven days"></div>
+      <p class="chart-summary" id="weeklyChartSummary" aria-live="polite"></p>
+    </section>
+
+    <section class="card activity-card" aria-labelledby="recentActivityTitle">
+      <div class="section-header">
+        <div>
+          <h2 class="section-heading" id="recentActivityTitle">Recent vehicle activity</h2>
+          <p class="text-muted">The latest vehicle records across your site.</p>
+        </div>
+        <a class="text-link" href="logs.html">View all logs</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Type</th>
+              <th>Driver</th>
+              <th>Entry time</th>
+              <th>Exit time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recentActivityBody">
+            <tr><td colspan="6" class="table-empty">Loading recent activity...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
   <script src="js/api.js"></script>
   <script>
     if (!requireAuth()) throw new Error('redirect');
 
-    document.getElementById('logoutLink').addEventListener('click', (e) => {
-      e.preventDefault();
-      localStorage.removeItem('vtrack_token');
-      window.location.href = 'login.html';
-    });
+    const DASHBOARD_REFRESH_INTERVAL = 30_000;
+    let dashboardLoadInProgress = false;
+
+    function toDateKey(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+      return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0'),
+      ].join('-');
+    }
+
+    function renderWeeklyChart(logs) {
+      const chart = document.getElementById('weeklyChart');
+      const today = new Date();
+      const days = [];
+
+      for (let offset = 6; offset >= 0; offset -= 1) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - offset);
+        const key = toDateKey(date);
+        const entries = logs.filter((log) => toDateKey(log.entryTime) === key).length;
+        const exits = logs.filter((log) => toDateKey(log.exitTime) === key).length;
+        days.push({ date, entries, exits });
+      }
+
+      const maxValue = Math.max(1, ...days.flatMap((day) => [day.entries, day.exits]));
+      chart.replaceChildren();
+      days.forEach(({ date, entries, exits }) => {
+        const group = document.createElement('div');
+        group.className = 'chart-day';
+        group.title = `${date.toLocaleDateString()}: ${entries} entries, ${exits} exits`;
+
+        const bars = document.createElement('div');
+        bars.className = 'chart-bars';
+
+        [
+          { value: entries, className: 'chart-bar chart-bar-entry', label: 'Entries' },
+          { value: exits, className: 'chart-bar chart-bar-exit', label: 'Exits' },
+        ].forEach(({ value, className, label }) => {
+          const bar = document.createElement('span');
+          bar.className = className;
+          bar.style.height = `${Math.max(value === 0 ? 3 : 8, (value / maxValue) * 132)}px`;
+          bar.title = `${label}: ${value}`;
+          bars.appendChild(bar);
+        });
+
+        const label = document.createElement('span');
+        label.className = 'chart-day-label';
+        label.textContent = date.toLocaleDateString(undefined, { weekday: 'short' });
+        group.append(bars, label);
+        chart.appendChild(group);
+      });
+
+      const totalEntries = days.reduce((total, day) => total + day.entries, 0);
+      const totalExits = days.reduce((total, day) => total + day.exits, 0);
+      document.getElementById('weeklyChartSummary').textContent =
+        `Last 7 days: ${totalEntries} entries and ${totalExits} exits.`;
+    }
+
+    function renderRecentActivity(logs) {
+      const body = document.getElementById('recentActivityBody');
+      const recentLogs = [...logs]
+        .sort((a, b) => new Date(b.entryTime) - new Date(a.entryTime))
+        .slice(0, 8);
+
+      if (recentLogs.length === 0) {
+        body.innerHTML = '<tr><td colspan="6" class="table-empty">No vehicle activity has been recorded yet.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = recentLogs.map((log) => `
+        <tr class="${log.overstayAlert ? 'overstay' : ''}">
+          <td><strong>${escapeHtmlValue(log.vehicleNumber)}</strong></td>
+          <td>${escapeHtmlValue(log.vehicleType)}</td>
+          <td>${escapeHtmlValue(log.driverName || '-')}</td>
+          <td>${escapeHtmlValue(formatDateTime(log.entryTime))}</td>
+          <td>${escapeHtmlValue(formatDateTime(log.exitTime))}</td>
+          <td>${renderLogStatus(log)}</td>
+        </tr>
+      `).join('');
+    }
 
     async function loadDashboard() {
+      if (dashboardLoadInProgress) return;
+      dashboardLoadInProgress = true;
+
       const errEl = document.getElementById('dashboardError');
       try {
-        const data = await getDashboard();
-        document.getElementById('todayEntries').textContent = data.todayEntries;
-        document.getElementById('todayExits').textContent = data.todayExits;
-        document.getElementById('currentlyParked').textContent = data.currentlyParked;
-        errEl.style.display = 'none';
+        const [stats, logs] = await Promise.all([getDashboard(), getAllLogs()]);
+        document.getElementById('todayEntries').textContent = stats.todayEntries;
+        document.getElementById('todayExits').textContent = stats.todayExits;
+        document.getElementById('currentlyParked').textContent = stats.currentlyParked;
+        renderWeeklyChart(logs);
+        renderRecentActivity(logs);
+        document.getElementById('dashboardLastUpdated').textContent =
+          `Last updated ${new Date().toLocaleTimeString()}. Refreshes automatically every 30 seconds.`;
+        errEl.hidden = true;
       } catch (err) {
         errEl.textContent = err.message || 'Failed to load dashboard';
-        errEl.style.display = 'block';
+        errEl.hidden = false;
+        document.getElementById('recentActivityBody').innerHTML =
+          '<tr><td colspan="6" class="table-empty">Recent activity could not be loaded.</td></tr>';
+      } finally {
+        dashboardLoadInProgress = false;
       }
     }
 
     loadDashboard();
+    window.setInterval(() => {
+      if (!document.hidden) loadDashboard();
+    }, DASHBOARD_REFRESH_INTERVAL);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) loadDashboard();
+    });
   </script>
 </body>
 </html>

@@ -24,7 +24,7 @@ public class SimpleTokenAuthFilter extends OncePerRequestFilter {
     private static final String HEADER_AUTH_TOKEN = "X-Auth-Token";
     private static final String HEADER_AUTHORIZATION = "Authorization";
 
-    @Value("${vtrack.auth.token:vtrack-admin-token}")
+    @Value("${vtrack.auth.token}")
     private String validToken;
 
     @Override

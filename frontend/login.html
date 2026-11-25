@@ -10,17 +10,18 @@
   <nav class="nav">
     <span class="nav-brand">V-Track</span>
     <div class="nav-links">
+      <a href="index.html">Home</a>
       <a href="login.html" class="active">Login</a>
     </div>
   </nav>
 
-  <div class="container">
+  <main class="container login-page">
     <h1 class="page-title">Admin Login</h1>
     <div class="card" style="max-width: 400px;">
       <form id="loginForm">
         <div class="form-group">
           <label for="username">Username</label>
-          <input type="text" id="username" name="username" required placeholder="admin">
+          <input type="text" id="username" name="username" required placeholder="Username">
         </div>
         <div class="form-group">
           <label for="password">Password</label>
@@ -30,14 +31,20 @@
         <button type="submit" class="btn btn-primary" id="loginBtn">Login</button>
       </form>
     </div>
-    <p class="text-muted mt-2">Default: admin / admin123</p>
-  </div>
+  </main>
 
   <script src="js/api.js"></script>
   <script>
-    // If already logged in, redirect to dashboard
+    function getPostLoginLocation() {
+      const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+      return ['entry.html', 'exit.html', 'dashboard.html', 'logs.html', 'search.html'].includes(returnTo)
+        ? returnTo
+        : 'dashboard.html';
+    }
+
+    // Resume a pending navbar search after authentication.
     if (isLoggedIn()) {
-      window.location.href = 'dashboard.html';
+      window.location.href = getPostLoginLocation();
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -54,7 +61,7 @@
       try {
         const data = await login(username, password);
         if (data.success) {
-          window.location.href = 'dashboard.html';
+          window.location.href = getPostLoginLocation();
         } else {
           errorEl.textContent = data.message || 'Invalid credentials';
           errorEl.style.display = 'block';

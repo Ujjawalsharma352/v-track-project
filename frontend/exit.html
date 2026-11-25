@@ -12,16 +12,12 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="login.html">Login</a>
-      <a href="entry.html">Entry</a>
-      <a href="exit.html" class="active">Exit</a>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="logs.html">Logs</a>
-      <a href="search.html">Search</a>
     </div>
   </nav>
 
-  <div class="container">
+  <main class="container form-page">
     <h1 class="page-title">Vehicle Exit</h1>
+    <p class="page-intro">Complete a visit and review recent departures.</p>
     <div class="card" style="max-width: 500px;">
       <form id="exitForm">
         <div class="form-group">
@@ -44,10 +40,103 @@
         Overstay: Vehicle parked for more than 6 hours.
       </div>
     </div>
-  </div>
+
+    <section class="history-section" aria-labelledby="exitHistoryTitle">
+      <div class="history-header">
+        <div>
+          <h2 class="section-heading" id="exitHistoryTitle">Recent vehicle exits</h2>
+          <p class="text-muted">Browse completed visits. Sign in to view and search vehicle history.</p>
+        </div>
+        <label class="history-search">
+          <span class="sr-only">Search exits</span>
+          <input type="search" id="exitSearch" placeholder="Search vehicle, driver, or type" autocomplete="off">
+        </label>
+      </div>
+      <p class="history-login-note" id="exitLoginNote" hidden>
+        <a href="login.html">Log in</a> to view recent vehicle exits.
+      </p>
+      <div class="alert alert-error" id="exitHistoryError" hidden></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Type</th>
+              <th>Driver</th>
+              <th>Entry time</th>
+              <th>Exit time</th>
+              <th>Duration</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="exitHistoryBody">
+            <tr><td colspan="7" class="table-empty">Loading recent exits...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-pagination">
+        <p class="pagination-summary" id="exitPaginationSummary" aria-live="polite"></p>
+        <div class="pagination-actions">
+          <button type="button" class="btn btn-secondary btn-small" id="exitPrevious" disabled>Previous</button>
+          <button type="button" class="btn btn-secondary btn-small" id="exitNext" disabled>Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <script src="js/api.js"></script>
   <script>
+    if (!requireLogin('exit.html')) {
+      document.querySelector('main').hidden = true;
+    }
+
+    const exitSearch = document.getElementById('exitSearch');
+    const exitHistory = createPagedLogList({
+      tableBody: document.getElementById('exitHistoryBody'),
+      searchInput: exitSearch,
+      summary: document.getElementById('exitPaginationSummary'),
+      previousButton: document.getElementById('exitPrevious'),
+      nextButton: document.getElementById('exitNext'),
+      columnCount: 7,
+      emptyMessage: 'No completed vehicle exits have been recorded yet.',
+      renderRow: (log) => `
+        <tr class="${log.overstayAlert ? 'overstay' : ''}">
+          <td><strong>${escapeHtmlValue(log.vehicleNumber)}</strong></td>
+          <td>${escapeHtmlValue(log.vehicleType)}</td>
+          <td>${escapeHtmlValue(log.driverName || '-')}</td>
+          <td>${escapeHtmlValue(formatDateTime(log.entryTime))}</td>
+          <td>${escapeHtmlValue(formatDateTime(log.exitTime))}</td>
+          <td>${escapeHtmlValue(formatDuration(log.durationInMinutes))}</td>
+          <td>${renderLogStatus(log)}</td>
+        </tr>`,
+    });
+
+    async function loadExitHistory() {
+      const loginNote = document.getElementById('exitLoginNote');
+      const errorEl = document.getElementById('exitHistoryError');
+      if (!isLoggedIn()) {
+        exitSearch.disabled = true;
+        loginNote.hidden = false;
+        exitHistory.showMessage('Sign in to load recent vehicle exits.');
+        return;
+      }
+
+      exitSearch.disabled = false;
+      loginNote.hidden = true;
+      errorEl.hidden = true;
+      try {
+        const logs = await getAllLogs();
+        const exits = logs
+          .filter((log) => log.status === 'OUT' && log.exitTime)
+          .sort((a, b) => new Date(b.exitTime) - new Date(a.exitTime));
+        exitHistory.setRecords(exits);
+      } catch (err) {
+        errorEl.textContent = err.message || 'Could not load recent exits.';
+        errorEl.hidden = false;
+        exitHistory.showMessage('Recent exits are unavailable right now.');
+      }
+    }
+
     document.getElementById('exitForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
@@ -69,6 +158,7 @@
         document.getElementById('overstayAlert').style.display = data.overstayAlert ? 'block' : 'none';
         resultEl.style.display = 'block';
         document.getElementById('exitForm').reset();
+        await loadExitHistory();
       } catch (err) {
         errorEl.textContent = err.message || 'Failed to mark exit';
         errorEl.style.display = 'block';
@@ -77,6 +167,8 @@
         btn.textContent = 'Mark Exit';
       }
     });
+
+    loadExitHistory();
   </script>
 </body>
 </html>
